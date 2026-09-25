@@ -209,10 +209,10 @@ public class BionicProgramLauncherComponent extends GuestProgramLauncherComponen
             String memPath;
             if (i == 0) {
                 // Player 1 uses the original, non-numbered path that is known to work.
-                memPath = "/data/data/app.gamenative/files/imagefs/tmp/gamepad.mem";
+                memPath = "/data/data/" + app.gamenative.BuildConfig.APPLICATION_ID + "/files/imagefs/tmp/gamepad.mem";
             } else {
                 // Players 2, 3, 4 use a 1-based index.
-                memPath = "/data/data/app.gamenative/files/imagefs/tmp/gamepad" + i + ".mem";
+                memPath = "/data/data/" + app.gamenative.BuildConfig.APPLICATION_ID + "/files/imagefs/tmp/gamepad" + i + ".mem";
             }
 
             File memFile = new File(memPath);
@@ -339,6 +339,9 @@ public class BionicProgramLauncherComponent extends GuestProgramLauncherComponen
         envVars.put("LD_PRELOAD", ld_preload);
         envVars.put("EVSHIM_WINE", 1);
         envVars.put("EVSHIM_SHM_NAME", "controller-shm0");
+        // libevshim falls back to the release package's files dir; point it at ours so a
+        // differently-named build (e.g. the .dev debug build) finds WinHandler's gamepad_shm.
+        envVars.put("EVSHIM_BASE_PATH", "/data/data/" + app.gamenative.BuildConfig.APPLICATION_ID + "/files");
 
         if (container != null && container.isFasterExternalLoading()) {
             String ffpGameDir = null;

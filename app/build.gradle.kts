@@ -81,6 +81,7 @@ android {
             mapOf(
                 "icon" to iconValue,
                 "roundIcon" to iconRoundValue,
+                "appLabel" to "@string/app_name",
             ),
         )
 
@@ -167,6 +168,11 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
             signingConfig = signingConfigs.getByName("debug")
+            // Separate package so a dev build installs next to the release app instead of
+            // replacing it (different signing key). Its data, containers and games are separate.
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            manifestPlaceholders["appLabel"] = "GameNative Dev"
         }
         release {
             isMinifyEnabled = true
