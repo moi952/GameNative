@@ -234,6 +234,9 @@ class PluviaApp : SplitCompatApplication() {
         @Volatile
         var isActivityInForeground: Boolean = true
         var isImmersiveActivityResumed: Boolean = false
+        // Set before the VR activity starts: the launcher's onPause runs first and must not suspend the game.
+        @Volatile
+        var vrHandoffActive: Boolean = false
         // True while the booting splash covers the game screen (and its Resume overlay).
         @Volatile
         var isBootingSplashShowing: Boolean = false
@@ -267,6 +270,8 @@ class PluviaApp : SplitCompatApplication() {
                 .onFailure { Timber.e(it, "shutdownEnvironment: radialMenuCoordinator.detach") }
             runCatching { env?.stopEnvironmentComponents() }
                 .onFailure { Timber.e(it, "shutdownEnvironment: stopEnvironmentComponents") }
+            runCatching { app.gamenative.ui.screen.xr.VrLaunchCoordinator.close() }
+                .onFailure { Timber.e(it, "shutdownEnvironment: VrLaunchCoordinator.close") }
 
             // Stop performance driver
             PowerManager.stop()

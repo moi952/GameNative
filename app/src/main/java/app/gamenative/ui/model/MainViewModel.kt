@@ -648,24 +648,26 @@ class MainViewModel @Inject constructor(
                         }
                     }
                 }
-                container
+                app.gamenative.ui.screen.xr.VrLaunchCoordinator.applyVrOnlyDefault(context, container)
+                container to app.gamenative.ui.screen.xr.VrLaunchCoordinator.vrGameKind(container)
             }
 
             // Small delay to ensure the splash screen is visible before proceeding
             delay(100)
 
-            val container = apiJob.await()
+            val (container, vrKind) = apiJob.await()
 
-            if (app.gamenative.BuildConfig.XR_BUILD &&
-                container.isLaunchImmersiveMode() &&
-                app.gamenative.MainActivity.isHeadset(context)
-            ) {
+            if (app.gamenative.ui.screen.xr.VrLaunchCoordinator.useImmersive(context, container, vrKind)) {
                 bootingSplashTimeoutJob?.cancel()
                 bootingSplashTimeoutJob = null
                 setShowBootingSplash(false)
                 SteamService.keepAlive = true
                 app.gamenative.ui.screen.xr.ImmersiveXrActivity.start(context, appId, _offline.value)
             } else {
+                // The headset takes over once the game creates its OpenXR session.
+                if (app.gamenative.ui.screen.xr.VrLaunchCoordinator.shouldUse(context, container, vrKind)) {
+                    app.gamenative.ui.screen.xr.VrLaunchCoordinator.prepare(context, container)
+                }
                 _uiEvent.send(MainUiEvent.LaunchApp)
             }
         }

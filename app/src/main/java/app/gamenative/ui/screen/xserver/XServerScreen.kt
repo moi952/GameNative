@@ -554,7 +554,7 @@ fun XServerScreen(
 
     val gameId = ContainerUtils.extractGameIdFromContainerId(appId)
     val appLaunchInfo = SteamService.getAppInfoOf(gameId)?.let { appInfo ->
-        SteamService.getWindowsLaunchInfos(gameId).firstOrNull()
+        SteamService.getWindowsLaunchInfo(gameId, vr = app.gamenative.ui.screen.xr.VrLaunchCoordinator.runtime != null)
     }
 
     var currentAppInfo = SteamService.getAppInfoOf(gameId)
@@ -2350,7 +2350,7 @@ fun XServerScreen(
 
                             Timber.i("Doing things once")
                             val envVars = EnvVars()
-                            immersiveHooks?.windowsVr?.beforeWineSystemSetup(container)
+                            app.gamenative.ui.screen.xr.VrLaunchCoordinator.windowsVr(immersiveHooks)?.beforeWineSystemSetup(container)
 
                             runBlocking {
                                 setupWineSystemFiles(
@@ -4104,7 +4104,7 @@ private fun setupXEnvironment(
         guestProgramLauncherComponent.setSteamType(container.getSteamType())
 
         envVars.putAll(container.envVars)
-        immersiveHooks?.windowsVr?.afterContainerEnvironmentMerged(envVars, container)
+        app.gamenative.ui.screen.xr.VrLaunchCoordinator.windowsVr(immersiveHooks)?.afterContainerEnvironmentMerged(envVars, container)
         envVars.remove("DXVK_FRAME_RATE")
         envVars.remove("VKD3D_FRAME_RATE")
         if (!envVars.has("WINEESYNC")) envVars.put("WINEESYNC", "1")
@@ -4332,9 +4332,9 @@ private fun setupXEnvironment(
     }
 
     try {
-        immersiveHooks?.windowsVr?.beforeGuestProcessStart()
+        app.gamenative.ui.screen.xr.VrLaunchCoordinator.windowsVr(immersiveHooks)?.beforeGuestProcessStart()
         environment.startEnvironmentComponents()
-        immersiveHooks?.windowsVr?.onEnvironmentStarted()
+        app.gamenative.ui.screen.xr.VrLaunchCoordinator.windowsVr(immersiveHooks)?.onEnvironmentStarted()
     } catch (e: Exception) {
         Timber.e(e, "Failed to start environment components, cleaning up")
         try {
@@ -4433,7 +4433,12 @@ private fun getWineStartCommand(
         }
         if (!container.isUseLegacyDRM && !ContainerUtils.isAbsoluteWindowsPath(container.executablePath)){
             // Create ColdClientLoader.ini file
-            SteamUtils.writeColdClientIni(gameId, container, appLaunchInfo)
+            SteamUtils.writeColdClientIni(
+                gameId,
+                container,
+                appLaunchInfo,
+                vrLaunch = app.gamenative.ui.screen.xr.VrLaunchCoordinator.runtime != null,
+            )
         }
         val controllerVdfText = SteamService.resolveSteamControllerVdfText(gameId)
         if (controllerVdfText.isNullOrEmpty()) {
