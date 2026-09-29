@@ -2626,6 +2626,10 @@
     <string name="vr_game_waiting">The game is preparing its VR display…</string>
     <string name="vr_game_start_failed">Couldn\'t switch to the headset. The game keeps running in this window.</string>
     <string name="vr_launch_mode_window">Starts in this window, then switches to the headset when the game goes into VR.</string>
+    <string name="vr_launch_option">VR launch option</string>
+    <string name="launch_option_title">How would you like to launch %1$s?</string>
+    <string name="launch_option_dont_ask">Don\'t ask again</string>
+    <string name="launch_option_ask">Ask every time</string>
     <string name="vr_diagnostics_export_desc">Saves a report of your last VR sessions to Downloads/GameNative, to attach when you report a problem with a VR game.</string>
     <string name="vr_diagnostics_export_failed">Couldn\'t create the VR diagnostics report.</string>
     <string name="vr_diagnostics_saved">Report saved to %1$s</string>

@@ -87,6 +87,7 @@ import app.gamenative.api.DebugReportApi
 import app.gamenative.ui.component.dialog.ContainerConfigDialog
 import app.gamenative.ui.component.dialog.DebugPreRunDialog
 import app.gamenative.ui.component.dialog.DebugReportDialog
+import app.gamenative.ui.component.dialog.LaunchOptionDialog
 import app.gamenative.ui.component.dialog.GameFeedbackDialog
 import app.gamenative.ui.component.dialog.LoadingDialog
 import app.gamenative.ui.component.dialog.MessageDialog
@@ -1600,6 +1601,14 @@ fun PluviaMain(
                     heroImageUrl = state.bootingSplashHeroImageUrl,
                     bootAd = state.bootAd,
                     onAbort = { viewModel.abortBoot() },
+                )
+            }
+
+            state.launchOptionPrompt?.let { prompt ->
+                LaunchOptionDialog(
+                    prompt = prompt,
+                    onChoose = viewModel::onLaunchOptionChosen,
+                    onDismiss = viewModel::onLaunchOptionDismissed,
                 )
             }
 

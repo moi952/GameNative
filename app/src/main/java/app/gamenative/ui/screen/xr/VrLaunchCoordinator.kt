@@ -16,6 +16,8 @@ import app.gamenative.ui.screen.xr.windows.WindowsVrRuntimeService
 import app.gamenative.ui.screen.xr.windows.WindowsVrSessionListener
 import app.gamenative.ui.util.SnackbarManager
 import app.gamenative.utils.CURRENT_VR_CATEGORY_PARSE_VERSION
+import app.gamenative.utils.LaunchMode
+import app.gamenative.utils.SteamLaunchOptions
 import app.gamenative.utils.ContainerUtils
 import com.winlator.container.Container
 import com.winlator.renderer.GLRenderer
@@ -101,6 +103,16 @@ object VrLaunchCoordinator : WindowsVrSessionListener {
             MainActivity.isHeadset(context) &&
             WindowsVrRuntimeConfig.from(container).enabled &&
             (kind != VrGameKind.NONE || !container.isLaunchImmersiveMode())
+
+    fun launchMode(context: Context, container: Container): LaunchMode =
+        if (BuildConfig.XR_BUILD && MainActivity.isHeadset(context) && WindowsVrRuntimeConfig.from(container).enabled) {
+            LaunchMode.VR
+        } else {
+            LaunchMode.FLAT
+        }
+
+    fun resolveLaunchInfo(context: Context, container: Container, gameId: Int): app.gamenative.data.LaunchInfo? =
+        SteamLaunchOptions.resolve(container, gameId, launchMode(context, container))
 
     fun useImmersive(context: Context, container: Container, kind: VrGameKind): Boolean =
         BuildConfig.XR_BUILD &&
