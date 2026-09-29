@@ -109,6 +109,13 @@ object VrLaunchCoordinator : WindowsVrSessionListener {
         }
     }
 
+    /** Null while Steam hasn't sent the game's VR categories yet (e.g. right after install). */
+    fun vrGameKindIfKnown(container: Container): VrGameKind? {
+        if (ContainerUtils.extractGameSourceFromContainerId(container.id) != GameSource.STEAM) return VrGameKind.NONE
+        val app = steamApp(container) ?: return null
+        return if (app.vrCategoryParseVersion < CURRENT_VR_CATEGORY_PARSE_VERSION) null else vrGameKind(container)
+    }
+
     // VR only games never use the immersive screen; for VR supported ones VR wins over it.
     fun shouldUse(context: Context, container: Container, kind: VrGameKind): Boolean =
         BuildConfig.XR_BUILD &&
