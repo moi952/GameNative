@@ -26,7 +26,8 @@ import `in`.dragonbra.javasteam.types.KeyValue
 import java.util.Date
 import timber.log.Timber
 
-const val CURRENT_UFS_PARSE_VERSION = 4
+// Bumping re-parses the whole SteamApp row from PICS on next login and also triggers the root-override cloud requery.
+const val CURRENT_UFS_PARSE_VERSION = 5
 
 // Bump to reprocess the VR flags of cached apps.
 const val CURRENT_VR_CATEGORY_PARSE_VERSION = 1
