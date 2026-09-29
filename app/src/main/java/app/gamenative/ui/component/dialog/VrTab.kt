@@ -35,6 +35,8 @@ import app.gamenative.ui.screen.xr.windows.WindowsVrRuntimeService
 import app.gamenative.ui.theme.settingsTileColors
 import app.gamenative.ui.theme.settingsTileColorsAlt
 import app.gamenative.utils.ContainerUtils
+import app.gamenative.utils.LaunchMode
+import app.gamenative.utils.SteamLaunchOptions
 import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import com.alorma.compose.settings.ui.SettingsSwitch
@@ -53,6 +55,16 @@ fun VrTabContent(state: ContainerConfigState, containerId: String?) {
     // Shown in the tab: a snackbar would be hidden behind the dialog.
     var exportResult by remember { mutableStateOf<String?>(null) }
     var exportedReport by remember { mutableStateOf<Uri?>(null) }
+    var vrLaunchOptions by remember { mutableStateOf<Pair<String, List<app.gamenative.data.LaunchInfo>>?>(null) }
+    LaunchedEffect(containerId) {
+        vrLaunchOptions = withContext(Dispatchers.IO) {
+            val id = containerId ?: return@withContext null
+            if (ContainerUtils.extractGameSourceFromContainerId(id) != app.gamenative.data.GameSource.STEAM) return@withContext null
+            val gameId = ContainerUtils.extractGameIdFromContainerId(id)
+            val name = app.gamenative.service.SteamService.getAppInfoOf(gameId)?.name.orEmpty()
+            name to SteamLaunchOptions.candidates(gameId, LaunchMode.VR)
+        }
+    }
     val exportResultRequester = remember { BringIntoViewRequester() }
     LaunchedEffect(exportResult) { if (exportResult != null) exportResultRequester.bringIntoView() }
     SettingsGroup() {
@@ -75,6 +87,17 @@ fun VrTabContent(state: ContainerConfigState, containerId: String?) {
                     state.config.value = config.copy(openCompositeEnabled = checked)
                 },
             )
+        }
+        vrLaunchOptions?.let { (gameName, options) ->
+            if (options.size > 1) {
+                LaunchOptionSetting(
+                    title = stringResource(R.string.vr_launch_option),
+                    options = options,
+                    gameName = gameName,
+                    selectedKey = config.vrLaunchOption,
+                    onSelected = { key -> state.config.value = config.copy(vrLaunchOption = key) },
+                )
+            }
         }
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
             Text(text = stringResource(R.string.xr_render_scale))

@@ -1360,21 +1360,35 @@ abstract class BaseAppScreen {
         val containerSaveMutex = remember(libraryItem.appId) { kotlinx.coroutines.sync.Mutex() }
         if (isImmersiveModeSupported) {
             LaunchedEffect(libraryItem.appId) {
-                val stored = withContext(Dispatchers.IO) {
+                suspend fun readStored() = withContext(Dispatchers.IO) {
                     runCatching {
                         val container = ContainerUtils.getContainer(context, libraryItem.appId)
                         app.gamenative.ui.screen.xr.VrLaunchCoordinator.applyVrOnlyDefault(context, container)
                         Triple(
                             container.isLaunchImmersiveMode(),
                             container.getExtra(WINDOWS_VR_ENABLED_EXTRA, "false").toBoolean(),
-                            app.gamenative.ui.screen.xr.VrLaunchCoordinator.vrGameKind(container),
+                            app.gamenative.ui.screen.xr.VrLaunchCoordinator.vrGameKindIfKnown(container),
                         )
                     }.getOrDefault(Triple(true, false, app.gamenative.ui.screen.xr.VrLaunchCoordinator.VrGameKind.NONE))
                 }
+                val stored = readStored()
                 if (isImmersiveModeEnabledState == null) {
                     isImmersiveModeEnabledState = stored.first
                     isVrModeEnabledState = stored.second
-                    vrKindState = stored.third
+                    vrKindState = stored.third ?: app.gamenative.ui.screen.xr.VrLaunchCoordinator.VrGameKind.NONE
+                }
+                if (stored.third == null) {
+                    // Steam sends the VR categories during or after install: pick them up live.
+                    launch {
+                        while (true) {
+                            delay(2_000)
+                            val refreshed = readStored()
+                            val kind = refreshed.third ?: continue
+                            isVrModeEnabledState = refreshed.second
+                            vrKindState = kind
+                            break
+                        }
+                    }
                 }
                 launch {
                     for (enabled in immersiveModeSaveRequests) {

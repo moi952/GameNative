@@ -1018,14 +1018,6 @@ internal fun AppScreenContent(
                                     color = Color.White,
                                 )
                             }
-                            if (immersiveMode.isVrEnabled) {
-                                Text(
-                                    text = stringResource(R.string.vr_launch_mode_window),
-                                    modifier = Modifier.padding(start = 48.dp, end = 8.dp),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(alpha = 0.7f),
-                                )
-                            }
                         }
                     }
 
