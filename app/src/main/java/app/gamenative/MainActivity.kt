@@ -471,7 +471,13 @@ class MainActivity : ComponentActivity() {
             isChangingConfigurations,
         )
 
-        if (SteamService.isConnected && !SteamService.isLoggedIn && !isChangingConfigurations && !SteamService.keepAlive) {
+        if (SteamService.isConnected &&
+            !SteamService.isLoggedIn &&
+            !isChangingConfigurations &&
+            !SteamService.keepAlive &&
+            !SteamService.isLaunchInProgress &&
+            !SteamService.isExitInProgress
+        ) {
             Timber.i("Stopping Steam Service")
             SteamService.stop()
         }
@@ -613,12 +619,13 @@ class MainActivity : ComponentActivity() {
         }
 
         Timber.d(
-            "onStop - Index: %d, Connected: %b, Logged-In: %b, Changing-Config: %b, Keep Alive: %b, Is Importing: %b",
+            "onStop - Index: %d, Connected: %b, Logged-In: %b, Changing-Config: %b, Keep Alive: %b, Launching: %b, Is Importing: %b",
             index,
             SteamService.isConnected,
             SteamService.isLoggedIn,
             isChangingConfigurations,
             SteamService.keepAlive,
+            SteamService.isLaunchInProgress,
             SteamService.isImporting,
         )
         // stop SteamService only if no downloads or sync are in progress
@@ -627,6 +634,8 @@ class MainActivity : ComponentActivity() {
             !SteamService.hasActiveOperations() &&
             !SteamService.isLoginInProgress &&
             !SteamService.keepAlive &&
+            !SteamService.isLaunchInProgress &&
+            !SteamService.isExitInProgress &&
             !SteamService.isImporting
         ) {
             Timber.i("Stopping SteamService - no active operations")
