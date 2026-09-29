@@ -2630,6 +2630,11 @@
     <string name="launch_option_title">How would you like to launch %1$s?</string>
     <string name="launch_option_dont_ask">Don\'t ask again</string>
     <string name="launch_option_ask">Ask every time</string>
+    <string name="non_vr_args_title">Non-VR launch options detected</string>
+    <string name="non_vr_args_message">%1$s is VR only, but its launch arguments (%2$s) turn VR off. You can remove them now, or change them later in %3$s.</string>
+    <string name="non_vr_args_remove">Remove</string>
+    <string name="non_vr_args_keep">Keep</string>
+    <string name="non_vr_args_removed">Removed %1$s from the launch arguments</string>
     <string name="vr_diagnostics_export_desc">Saves a report of your last VR sessions to Downloads/GameNative, to attach when you report a problem with a VR game.</string>
     <string name="vr_diagnostics_export_failed">Couldn\'t create the VR diagnostics report.</string>
     <string name="vr_diagnostics_saved">Report saved to %1$s</string>

@@ -10,6 +10,8 @@ import com.materialkolor.PaletteStyle
 
 data class LaunchOptionPrompt(val gameName: String, val mode: LaunchMode, val options: List<LaunchInfo>)
 
+data class NonVrArgsPrompt(val gameName: String, val args: List<String>)
+
 data class MainState(
     val appTheme: AppTheme = AppTheme.NIGHT,
     val paletteStyle: PaletteStyle = PaletteStyle.TonalSpot,
@@ -32,6 +34,7 @@ data class MainState(
     val bootingSplashHeroImageUrl: String = "",
     val bootAd: BootAdItem? = null,
     val launchOptionPrompt: LaunchOptionPrompt? = null,
+    val nonVrArgsPrompt: NonVrArgsPrompt? = null,
 
     // Connection state for background reconnection
     // Default to DISCONNECTED - service will start and set to CONNECTING

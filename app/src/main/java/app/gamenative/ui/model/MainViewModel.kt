@@ -30,8 +30,10 @@ import app.gamenative.service.epic.EpicService
 import app.gamenative.service.gog.GOGService
 import app.gamenative.utils.ConversionTracker
 import app.gamenative.utils.CustomGameScanner
+import app.gamenative.MainActivity
 import app.gamenative.ui.data.LaunchOptionPrompt
 import app.gamenative.ui.data.MainState
+import app.gamenative.ui.data.NonVrArgsPrompt
 import app.gamenative.ui.enums.ConnectionState
 import app.gamenative.ui.screen.PluviaScreen
 import app.gamenative.ui.util.SnackbarManager
@@ -39,6 +41,7 @@ import app.gamenative.utils.ContainerUtils
 import app.gamenative.utils.DebugReportUtils
 import app.gamenative.utils.IntentLaunchManager
 import app.gamenative.utils.LaunchMode
+import app.gamenative.utils.NonVrLaunchArgs
 import app.gamenative.utils.SteamLaunchOptions
 import app.gamenative.utils.SteamUtils
 import app.gamenative.utils.UpdateInfo
@@ -654,6 +657,7 @@ class MainViewModel @Inject constructor(
                     }
                 }
                 app.gamenative.ui.screen.xr.VrLaunchCoordinator.applyVrOnlyDefault(context, container)
+                app.gamenative.ui.screen.xr.VrLaunchCoordinator.dropNonVrArgs(context, container)
                 container to app.gamenative.ui.screen.xr.VrLaunchCoordinator.vrGameKind(container)
             }
 
@@ -1009,6 +1013,74 @@ class MainViewModel @Inject constructor(
     }
 
     private var launchOptionAnswer: CompletableDeferred<Pair<app.gamenative.data.LaunchInfo, Boolean>?>? = null
+    private var nonVrArgsAnswer: CompletableDeferred<Boolean?>? = null
+
+    /** Asks what a VR launch needs right at Play, before any loading, so the headset can come off. */
+    fun checkBeforeLaunch(context: Context, appId: String, onReady: () -> Unit) {
+        viewModelScope.launch {
+            SteamLaunchOptions.clearSessionChoice(appId)
+            rememberOnceCreated = null
+            if (ContainerUtils.extractGameSourceFromContainerId(appId) != GameSource.STEAM ||
+                !BuildConfig.XR_BUILD || !MainActivity.isHeadset(context)
+            ) {
+                onReady()
+                return@launch
+            }
+            val gameId = ContainerUtils.extractGameIdFromContainerId(appId)
+            val container = withContext(Dispatchers.IO) {
+                if (!ContainerUtils.hasContainer(context, appId)) return@withContext null
+                ContainerUtils.getContainer(context, appId).also {
+                    app.gamenative.ui.screen.xr.VrLaunchCoordinator.applyVrOnlyDefault(context, it)
+                }
+            }
+            val mode = when {
+                container != null -> app.gamenative.ui.screen.xr.VrLaunchCoordinator.launchMode(context, container)
+                withContext(Dispatchers.IO) { SteamService.getAppInfoOf(gameId)?.isVrOnly == true } -> LaunchMode.VR
+                else -> LaunchMode.FLAT
+            }
+            if (mode == LaunchMode.VR) {
+                if (!chooseLaunchOption(appId, gameId, mode, container)) return@launch
+                if (container != null && !confirmNonVrArgs(container, gameId)) return@launch
+            }
+            onReady()
+        }
+    }
+
+    // VR only games drop these on their own at launch; for the others the player decides.
+    private suspend fun confirmNonVrArgs(container: Container, gameId: Int): Boolean {
+        if (app.gamenative.ui.screen.xr.VrLaunchCoordinator.vrGameKind(container) ==
+            app.gamenative.ui.screen.xr.VrLaunchCoordinator.VrGameKind.ONLY
+        ) {
+            return true
+        }
+        val found = NonVrLaunchArgs.find(container.execArgs)
+        if (found.isEmpty()) return true
+        val gameName = withContext(Dispatchers.IO) { SteamService.getAppInfoOf(gameId)?.name.orEmpty() }
+        val answer = CompletableDeferred<Boolean?>()
+        nonVrArgsAnswer = answer
+        _state.update { it.copy(nonVrArgsPrompt = NonVrArgsPrompt(gameName, found)) }
+        val remove = try {
+            answer.await()
+        } finally {
+            nonVrArgsAnswer = null
+            _state.update { it.copy(nonVrArgsPrompt = null) }
+        } ?: return false
+        if (remove) {
+            withContext(Dispatchers.IO) {
+                container.execArgs = NonVrLaunchArgs.strip(container.execArgs)
+                container.saveData()
+            }
+        }
+        return true
+    }
+
+    fun onNonVrArgsAnswered(remove: Boolean) {
+        nonVrArgsAnswer?.complete(remove)
+    }
+
+    fun onNonVrArgsDismissed() {
+        nonVrArgsAnswer?.complete(null)
+    }
     private var rememberOnceCreated: Pair<String, app.gamenative.data.LaunchInfo>? = null
 
     /** Asks which Steam launch option to use when the mode has several; false if cancelled. */

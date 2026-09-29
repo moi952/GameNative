@@ -27,6 +27,7 @@ import app.gamenative.R
 import app.gamenative.data.LaunchInfo
 import app.gamenative.ui.component.settings.SettingsListDropdown
 import app.gamenative.ui.data.LaunchOptionPrompt
+import app.gamenative.ui.data.NonVrArgsPrompt
 import app.gamenative.ui.theme.settingsTileColors
 import app.gamenative.utils.SteamLaunchOptions
 
@@ -75,6 +76,32 @@ fun LaunchOptionDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(text = stringResource(android.R.string.cancel)) }
+        },
+    )
+}
+
+/** Warns at Play that the container's arguments turn VR off; tells where to change them. */
+@Composable
+fun NonVrArgsDialog(
+    prompt: NonVrArgsPrompt,
+    onAnswer: (remove: Boolean) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val location = stringResource(R.string.container_config_tab_general) + " › " + stringResource(R.string.exec_arguments)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.non_vr_args_title)) },
+        text = {
+            Text(text = stringResource(R.string.non_vr_args_message, prompt.gameName, prompt.args.joinToString(" "), location))
+        },
+        confirmButton = {
+            TextButton(onClick = { onAnswer(true) }) { Text(text = stringResource(R.string.non_vr_args_remove)) }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = onDismiss) { Text(text = stringResource(android.R.string.cancel)) }
+                TextButton(onClick = { onAnswer(false) }) { Text(text = stringResource(R.string.non_vr_args_keep)) }
+            }
         },
     )
 }

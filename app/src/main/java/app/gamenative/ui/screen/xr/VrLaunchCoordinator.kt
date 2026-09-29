@@ -17,6 +17,7 @@ import app.gamenative.ui.screen.xr.windows.WindowsVrSessionListener
 import app.gamenative.ui.util.SnackbarManager
 import app.gamenative.utils.CURRENT_VR_CATEGORY_PARSE_VERSION
 import app.gamenative.utils.LaunchMode
+import app.gamenative.utils.NonVrLaunchArgs
 import app.gamenative.utils.SteamLaunchOptions
 import app.gamenative.utils.ContainerUtils
 import com.winlator.container.Container
@@ -84,6 +85,17 @@ object VrLaunchCoordinator : WindowsVrSessionListener {
         container.saveData()
         if (app.isVrOnly) Timber.i("VR launch: %s is VR only, VR launch enabled by default", container.id)
         return app.isVrOnly
+    }
+
+    // A VR only game can't run flat, so arguments that turn VR off (often from shared configs) go.
+    fun dropNonVrArgs(context: Context, container: Container) {
+        if (launchMode(context, container) != LaunchMode.VR || vrGameKind(container) != VrGameKind.ONLY) return
+        val found = NonVrLaunchArgs.find(container.execArgs)
+        if (found.isEmpty()) return
+        container.execArgs = NonVrLaunchArgs.strip(container.execArgs)
+        container.saveData()
+        Timber.i("VR launch: removed %s from %s launch arguments", found, container.id)
+        SnackbarManager.show(context.getString(R.string.non_vr_args_removed, found.joinToString(" ")))
     }
 
     enum class VrGameKind { NONE, SUPPORTED, ONLY }
