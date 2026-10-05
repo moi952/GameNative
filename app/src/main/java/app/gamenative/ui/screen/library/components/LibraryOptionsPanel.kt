@@ -49,6 +49,7 @@ import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.SportsEsports
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Stars
+import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -243,6 +244,7 @@ fun LibraryOptionsPanel(
                                         AppFilter.APPLICATION,
                                         AppFilter.TOOL,
                                         AppFilter.DEMO,
+                                        AppFilter.PLAYTEST,
                                     )
                                 ) {
                                     OptionListItem(
@@ -266,26 +268,19 @@ fun LibraryOptionsPanel(
                                 .padding(horizontal = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            val context = LocalContext.current
-                            val statusFilters = remember {
-                                buildList {
-                                    addAll(
-                                        listOf(
-                                            AppFilter.INSTALLED,
-                                            AppFilter.SHARED,
-                                            AppFilter.COMPATIBLE,
-                                            AppFilter.EXPIRED,
-                                            AppFilter.PLAYABLE,
-                                            AppFilter.FIVE_STAR,
-                                            AppFilter.FIVE_STAR_GPU,
-                                            AppFilter.PROVEN_GPU,
-                                        ),
-                                    )
-                                    if (app.gamenative.MainActivity.isHeadset(context)) add(AppFilter.VR)
-                                }
-                            }
                             AppFilter.entries.forEach { appFilter ->
-                                if (appFilter in statusFilters) {
+                                if (appFilter in listOf(
+                                        AppFilter.INSTALLED,
+                                        AppFilter.SHARED,
+                                        AppFilter.COMPATIBLE,
+                                        AppFilter.EXPIRED,
+                                        AppFilter.PLAYABLE,
+                                        AppFilter.FIVE_STAR,
+                                        AppFilter.FIVE_STAR_GPU,
+                                        AppFilter.PROVEN_GPU,
+                                        AppFilter.VR,
+                                    )
+                                ) {
                                     OptionListItem(
                                         text = stringResource(appFilter.displayTextRes),
                                         selected = selectedFilters.contains(appFilter),
@@ -565,4 +560,5 @@ private fun SortOption.icon(): ImageVector = when (this) {
     SortOption.RUNS_HIGH -> Icons.Rounded.SportsEsports
     SortOption.REVIEWS_HIGH -> Icons.Rounded.Star
     SortOption.REVIEWS_GPU_HIGH -> Icons.Rounded.Stars
+    SortOption.COMPATIBILITY -> Icons.Rounded.Verified
 }
